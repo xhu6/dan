@@ -6,13 +6,6 @@ import subprocess
 """
 Highly recommend reading the wiki:
 - https://github.com/mviereck/x11docker/wiki
-
-Assumptions about the base image:
-- Has render group
-- `user` has id 1000 gid 1000
-
-xhost +si:localuser:$USER
-need alsa-utils, piepwire and pipewire-alsa
 """
 
 OPTS = [
