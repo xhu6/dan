@@ -1,3 +1,5 @@
+#!/bin/bash
+
 _comp_cmd_dan()
 {
     local cur prev
@@ -6,7 +8,7 @@ _comp_cmd_dan()
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     if [[ ${COMP_CWORD} == 1 ]] ; then
-        COMPREPLY=( $(compgen -W "create enter" -- ${cur}) )
+        COMPREPLY=( $(compgen -W "create enter" -- "${cur}") )
         return
     fi
 
@@ -14,7 +16,7 @@ _comp_cmd_dan()
     if [[ ${COMP_WORDS[1]} == "enter" ]] ; then
         local containers
         containers=$(podman ps -a --format "{{.Names}}" --filter "status=running" 2>/dev/null)
-        COMPREPLY=( $(compgen -W "${containers}" -- ${cur}) )
+        COMPREPLY=( $(compgen -W "${containers}" -- "${cur}") )
         return
     fi
 
@@ -23,21 +25,21 @@ _comp_cmd_dan()
         if [[ ${cur} == -* ]] ; then
             local opts
             opts="--x11 --wayland --gpu --audio --ports --volume --image"
-            COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return
         fi
 
         if [[ ${prev} == "--image" || ${prev} == "-i" ]] ; then
             local images
             images=$(podman images --format "{{index .Names 0}}" 2>/dev/null)
-            COMPREPLY=( $(compgen -W "${images}" -- ${cur}) )
+            COMPREPLY=( $(compgen -W "${images}" -- "${cur}") )
             return
         fi
 
         if [[ ${prev} == "--volume" || ${prev} == "-v" ]] ; then
             local volumes
             volumes=$(podman volume ls --format "{{.Name}}" 2>/dev/null)
-            COMPREPLY=( $(compgen -W "${volumes}" -- ${cur}) )
+            COMPREPLY=( $(compgen -W "${volumes}" -- "${cur}") )
             return
         fi
     fi
