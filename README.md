@@ -11,7 +11,7 @@ By default, `dan` tries to use the `base` image which has these requirements
 - The user in the container has name `user` (for volumes)
 - The user has UID and GID of 1000 (for graphics)
 - Has the `render` group (for gpu access)
-- `alsa-utils`, `pipepwire` and `pipewire-alsa` are installed (for audio)
+- `alsa-utils`, `pipewire` and `pipewire-alsa` are installed (for audio)
 
 An example using Debian is provided. Feel free to customise the script and the image provided.
 
