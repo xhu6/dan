@@ -89,7 +89,7 @@ def process_create(args: Namespace) -> str:
             print("dan: error: ports should be comma seperated integers")
             exit(1)
 
-        extra_args += " ".join(f"-p localhost:{port}:{port}" for port in ports)
+        extra_args += " ".join(f"-p 127.0.0.1:{port}:{port}" for port in ports)
 
     if args.volume is not None:
         volume_name = args.volume or args.name
