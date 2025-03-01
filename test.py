@@ -44,7 +44,7 @@ class TestCreate(unittest.TestCase):
         cmd = to_cmd(f"create test -p {','.join(map(str, ports))}")
 
         for p in ports:
-            self.assertIn(f"-p localhost:{p}:{p}", cmd)
+            self.assertIn(f"-p 127.0.0.1:{p}:{p}", cmd)
 
     def test_invalid_ports(self):
         with self.assertRaises(SystemExit):
