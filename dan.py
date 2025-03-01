@@ -16,7 +16,7 @@ OPTS = [
 ]
 
 
-def get_args() -> Namespace:
+def get_parser() -> ArgumentParser:
     parser = ArgumentParser()
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -26,61 +26,61 @@ def get_args() -> Namespace:
         create_parser.add_argument(opt, full_opt, help=desc, action="store_true")
 
     create_parser.add_argument("-p", "--ports", help="publish ports to localhost")
-    create_parser.add_argument("-v", "--volume", help="mount volume", nargs="?")
-    create_parser.add_argument("-i", "--image", help="specify image", nargs="?")
+    create_parser.add_argument(
+        "-v", "--volume", help="mount volume", nargs="?", const=""
+    )
+    create_parser.add_argument("-i", "--image", help="specify image", nargs=1)
     create_parser.add_argument("name", help="container name")
 
     enter_parser = subparsers.add_parser("enter", help="enter a container")
     enter_parser.add_argument("name", help="container name")
 
-    return parser.parse_args()
+    return parser
+
+
+def get_args() -> Namespace:
+    return get_parser().parse_args()
+
+
+def deduplicate(extra_args: str) -> str:
+    unique_args = {arg.strip() for arg in extra_args.splitlines()}
+    return " ".join(unique_args)
 
 
 def process_create(args: Namespace) -> str:
     assert args.command == "create"
 
-    command = ["podman", "run", "-itd", "--stop-timeout=1", "--name", args.name]
-
-    if args.x11 or args.wayland or args.gpu or args.audio:
-        command.extend(["--security-opt", "label=type:container_runtime_t"])
-
-    if args.x11 or args.wayland:
-        command.extend(["--userns", "keep-id:uid=1000,gid=1000"])
+    extra_args = ""
 
     if args.x11:
-        settings = """
+        extra_args += """
+            --security-opt label=type:container_runtime_t
+            --userns keep-id:uid=1000,gid=1000
             -v /tmp/.X11-unix:/tmp/.X11-unix:ro
             -e DISPLAY
         """
-        command.extend(settings.split())
-
-    if args.wayland or args.audio:
-        command.extend(["-e", "XDG_RUNTIME_DIR=/tmp"])
 
     if args.wayland:
-        settings = """
+        extra_args += """
+            --security-opt label=type:container_runtime_t
+            --userns keep-id:uid=1000,gid=1000
             -e WAYLAND_DISPLAY
             -v "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}:/tmp/${WAYLAND_DISPLAY}:ro"
         """
-        command.extend(settings.split())
 
     if args.gpu:
-        settings = """
+        extra_args += """
+            --security-opt label=type:container_runtime_t
             --group-add video
             --group-add render
             --device /dev/dri
         """
-        command.extend(settings.split())
 
     if args.audio:
-        settings = """
+        extra_args += """
+            --security-opt label=type:container_runtime_t
             -v ${XDG_RUNTIME_DIR}/pipewire-0:/tmp/pipewire-0:ro
         """
-        command.extend(settings.split())
-
-    if args.volume is not None:
-        volume_name = args.volume or args.name
-        command.extend(["-v", f"{volume_name}:/home/user/data"])
 
     if args.ports:
         try:
@@ -89,12 +89,25 @@ def process_create(args: Namespace) -> str:
             print("dan: error: ports should be comma seperated integers")
             exit(1)
 
-        for port in ports:
-            command.extend(["-p", f"localhost:{port}:{port}"])
+        extra_args += " ".join(f"-p localhost:{port}:{port}" for port in ports)
+
+    if args.volume is not None:
+        volume_name = args.volume or args.name
+        extra_args += f"-v {volume_name}:/home/user/data"
 
     image_name = args.image or "base"
-    command.extend([image_name, "bash"])
-    return " ".join(command)
+    extra_args = deduplicate(extra_args)
+
+    command = f"""
+        podman run -itd --stop-timeout=1
+        --name {args.name}
+        -e XDG_RUNTIME_DIR=/tmp
+        {extra_args}
+        {image_name} bash
+    """
+
+    # Removes duplicate whitespace
+    return " ".join(command.split())
 
 
 def process_enter(args: Namespace) -> str:
