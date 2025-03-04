@@ -19,7 +19,7 @@ Special thanks to [the x11docker wiki](https://github.com/mviereck/x11docker/wik
 
 ## Note on X11
 
-If `--X11` is enabled, run the folowing to allow connections
+If `--X11` is enabled, run the following to allow connections
 ```bash
 xhost +SI:localuser:$USER
 ```
